@@ -140,13 +140,34 @@ namespace Facebook.Client
             get { return Session.ActiveSession.CurrentAccessTokenData.AppId; }
         }
 
+
+		/// <summary>
+		/// Allow developers to specify custom redirect uri
+		/// </summary>
+		/// <returns></returns>
+		private static string getRedirectUriFromConfig()
+		{
+			var task = Task.Run(async () => await AppAuthenticationHelper.GetFacebookConfigValue("Facebook", "RedirectUri"));
+			task.Wait();
+			return task.Result;
+		}
+
         public static string LoginRedirectUri
         {
             get
             {
-                var task = Task.Run(async () => await AppAuthenticationHelper.GetFacebookConfigValue("Facebook", "AppId"));
-                task.Wait();
-                return string.Format("fb{0}%3A%2F%2Fauthorize", task.Result);
+
+				var redirectUri = getRedirectUriFromConfig();
+				if (!String.IsNullOrEmpty(redirectUri))
+				{
+					return redirectUri;
+				}
+				else
+				{
+					var task = Task.Run(async () => await AppAuthenticationHelper.GetFacebookConfigValue("Facebook", "AppId"));
+					task.Wait();
+					return string.Format("fb{0}%3A%2F%2Fauthorize", task.Result);
+				}
             }
         }
         public static string AppRequestRedirectUri { get { return string.Format("fb{0}%3A%2F%2Fapprequest", AppId); } }
